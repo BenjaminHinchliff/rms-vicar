@@ -2282,11 +2282,15 @@ class VicarLabel():
         try:
             # Read the beginning of the VICAR file to get the label size
             f.seek(0)
-            snippet = f.read(40).decode('latin8')
-            match = _LBLSIZE_PATTERN.match(snippet)
-            if not match:       # pragma: no cover
-                raise VicarError('Missing LBLSIZE keyword in file ' + str(filepath))
-
+            offset = 0
+            match = None
+            for line in f:
+                if match := _LBLSIZE_PATTERN.search(line.decode('latin8')):
+                    offset = f.tell() - len(line) + match.start()
+                    break
+                if not match:       # pragma: no cover
+                    raise VicarError('Missing LBLSIZE keyword in file ' + str(filepath))
+                  
             lblsize = int(match.group(1))
 
             # Read the top VICAR label
